@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quayline
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quayline
+  namespace: quayline
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quayline
+  namespace: quayline
+  labels:
+    app: quayline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quayline
+  template:
+    metadata:
+      labels:
+        app: quayline
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/hesham-73/quayline:ci
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: quayline
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quayline
+  namespace: quayline
+spec:
+  selector:
+    app: quayline-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
