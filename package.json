@@ -1,0 +1,14 @@
+{
+  "name": "quayline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Small quay arrival board: an API, a test, a container image, and a Terraform example.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test"
+  }
+}
